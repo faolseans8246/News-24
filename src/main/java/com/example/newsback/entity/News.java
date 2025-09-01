@@ -2,32 +2,36 @@ package com.example.newsback.entity;
 
 import com.example.newsback.enums.ContentType;
 import com.example.newsback.index.Ids;
-import io.swagger.v3.oas.annotations.info.Info;
 import jakarta.persistence.*;
 import lombok.*;
-import org.w3c.dom.Text;
+import lombok.experimental.SuperBuilder;
 
+import java.util.List;
+
+@Getter
+@Setter
 @EqualsAndHashCode(callSuper = true)
-@Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity(name = "News")
+@SuperBuilder
+@Entity
+@Table(name = "news")
 public class News extends Ids {
 
     @Column(nullable = false)
-    private String title;
-
-    @Column(columnDefinition = "TEXT")
-    private String content;
-
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private ContentType contentType;
 
     @Lob
-    private byte[] fileData; // faylni bazaga saqlash uchun
+    @Basic(fetch = FetchType.LAZY)
+    @Column(name = "file_data")
+    private byte[] fileData; // faylning o'zi (BLOB)
 
-    private String fileName;  // asl fayl nomi
-    private String fileType;  // mime type (audio/mp3, video/mp4)
+    private String fileName;
+    private String fileType;
+    private Long fileSizeBytes;
+
+    // Har bir yangilik 3 tilda tarjimaga ega bo'ladi
+    @OneToMany(mappedBy = "news", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<NewsTranslation> translations;
 }

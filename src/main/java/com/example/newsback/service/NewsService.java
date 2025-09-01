@@ -1,10 +1,16 @@
 package com.example.newsback.service;
 
-import com.example.newsback.dto.NewsCreateDto;
+import com.example.newsback.dto.NewsCreateRequest;
+import com.example.newsback.dto.NewsDto;
+import com.example.newsback.dto.NewsTranslationDto;
 import com.example.newsback.entity.News;
-import com.example.newsback.payloads.ApiResponse;
+import com.example.newsback.entity.NewsTranslation;
+import com.example.newsback.enums.ContentType;
+import com.example.newsback.mapper.NewsMapper;
 import com.example.newsback.repository.NewsRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,52 +24,60 @@ public class NewsService {
 
     private final NewsRepository newsRepository;
 
-    public ApiResponse createNews(NewsCreateDto dto) throws IOException {
+    @Transactional
+    public NewsDto create(NewsCreateRequest req, MultipartFile file) throws IOException {
+        validateCreate(req, file);
+
         News news = News.builder()
-                .title(dto.title())
-                .content(dto.content())
-                .contentType(dto.contentType())
+                .contentType(req.contentType())
                 .build();
 
-        MultipartFile file = dto.file();
         if (file != null && !file.isEmpty()) {
             news.setFileData(file.getBytes());
             news.setFileName(file.getOriginalFilename());
-            news.setFileType(file.getContentType());
+            news.setFileType(file.getContentType() != null ? file.getContentType() : MediaType.APPLICATION_OCTET_STREAM_VALUE);
+            news.setFileSizeBytes(file.getSize());
         }
 
-        newsRepository.save(news);
-        return new ApiResponse("Yangilik qo'shildi", true, news);
+        List<NewsTranslation> translations = req.translations().stream()
+                .map(t -> NewsTranslation.builder()
+                        .news(news)
+                        .language(t.language())
+                        .title(t.title())
+                        .content(t.content())
+                        .build())
+                .toList();
+
+        news.setTranslations(translations);
+
+        News saved = newsRepository.save(news);
+        return NewsMapper.toDto(saved);
     }
 
-    public List<News> getAllNews() {
-        return newsRepository.findAll();
+    public List<NewsDto> getAll() {
+        return newsRepository.findAll().stream().map(NewsMapper::toDto).toList();
     }
 
-    public News getNews(UUID id) {
-        return newsRepository.findById(id).orElseThrow(() -> new RuntimeException("Yangilik topilmadi"));
+    public News getEntity(UUID id) {
+        return newsRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Yangilik topilmadi: " + id));
     }
 
-    public ApiResponse deleteNews(UUID id) {
+    public NewsDto get(UUID id) {
+        return NewsMapper.toDto(getEntity(id));
+    }
+
+    public void delete(UUID id) {
         newsRepository.deleteById(id);
-        return new ApiResponse("Yangilik o'chirildi", true);
     }
 
-    public ApiResponse updateNews(UUID id, NewsCreateDto dto) throws IOException {
-        News news = newsRepository.findById(id).orElseThrow(() -> new RuntimeException("Yangilik topilmadi"));
+    /* ======== Helperlar ======== */
 
-        news.setTitle(dto.title());
-        news.setContent(dto.content());
-        news.setContentType(dto.contentType());
-
-        MultipartFile file = dto.file();
-        if (file != null && !file.isEmpty()) {
-            news.setFileData(file.getBytes());
-            news.setFileName(file.getOriginalFilename());
-            news.setFileType(file.getContentType());
+    private void validateCreate(NewsCreateRequest req, MultipartFile file) {
+        if (req.contentType() == ContentType.TEXT) {
+            return;
         }
-
-        newsRepository.save(news);
-        return new ApiResponse("Yangilik yangilandi", true, news);
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("AUDIO/VIDEO uchun fayl majburiy.");
+        }
     }
 }

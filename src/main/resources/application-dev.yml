@@ -9,3 +9,14 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop
+
+servlet:
+  multipart:
+    max-file-size: 200MB
+    max-request-size: 200MB
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true

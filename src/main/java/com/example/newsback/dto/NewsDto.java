@@ -2,13 +2,14 @@ package com.example.newsback.dto;
 
 import com.example.newsback.enums.ContentType;
 
+import java.util.List;
 import java.util.UUID;
 
 public record NewsDto(
         UUID id,
-        String title,
-        String content,
+        ContentType contentType,
         String fileName,
-        ContentType contentType
-) {
-}
+        String fileType,
+        Long fileSizeBytes,
+        List<NewsTranslationDto> translations
+) {}
