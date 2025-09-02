@@ -1,12 +1,10 @@
+// package com.example.newsback.entity.News.java
 package com.example.newsback.entity;
 
-import com.example.newsback.enums.ContentType;
-import com.example.newsback.index.Ids;
+import com.example.newsback.index.Ids; // Changed package name to base for better naming
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-
-import java.util.List;
 
 @Getter
 @Setter
@@ -19,19 +17,31 @@ import java.util.List;
 public class News extends Ids {
 
     @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private ContentType contentType;
+    private String titleUz;
 
-    @Lob
-    @Basic(fetch = FetchType.LAZY)
-    @Column(name = "file_data")
-    private byte[] fileData; // faylning o'zi (BLOB)
+    @Column(nullable = false)
+    private String titleEn;
 
-    private String fileName;
-    private String fileType;
-    private Long fileSizeBytes;
+    @Column(nullable = false)
+    private String titleRu;
 
-    // Har bir yangilik 3 tilda tarjimaga ega bo'ladi
-    @OneToMany(mappedBy = "news", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    private List<NewsTranslation> translations;
+    @Column(columnDefinition = "TEXT")
+    private String descriptionUz;
+
+    @Column(columnDefinition = "TEXT")
+    private String descriptionEn;
+
+    @Column(columnDefinition = "TEXT")
+    private String descriptionRu;
+
+    @Column(columnDefinition = "TEXT")
+    private String contentUz;   // HTML from CKEditor
+
+    @Column(columnDefinition = "TEXT")
+    private String contentEn;
+
+    @Column(columnDefinition = "TEXT")
+    private String contentRu;
+
+    private String tags; // Comma-separated tags
 }

@@ -1,6 +1,10 @@
+// package com.example.newsback.repository.NewsRepository.java (New)
+
 package com.example.newsback.repository;
 
 import com.example.newsback.entity.News;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
